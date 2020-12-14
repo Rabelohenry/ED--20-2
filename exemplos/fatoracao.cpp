@@ -1,5 +1,5 @@
 #include <iostream>
-
+//fatoração
 using namespace std;
 
 bool prime(int a);
