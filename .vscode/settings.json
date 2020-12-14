@@ -4,6 +4,9 @@
     ".stylelintrc": "json",
     ".prettierrc": "json",
     "iostream": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "string": "cpp",
+    "xstring": "cpp",
+    "istream": "cpp"
   }
 }
