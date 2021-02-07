@@ -184,7 +184,6 @@ noh *avl::insereAux(noh *umNoh, const dado &umDado)
     else if (umDado.chave == umNoh->elemento.chave)
     {
       throw runtime_error("Erro na inserção: chave já existente!");
-      return umNoh;
     }
     else
     {

@@ -4,23 +4,23 @@ using namespace std;
 
 typedef unsigned int tipoChave;
 
+int acessos = 0;
+int acessosTotal = 0;
+
 struct dado
 {
   unsigned chave;
-  string nomeProduto;
-  string marca;
-  int quantidadeDisponivel;
 };
 
 ostream &operator<<(ostream &saida, const dado &e)
 {
-  saida << "(" << e.chave << "," << e.nomeProduto << "," << e.marca << "," << e.quantidadeDisponivel << ")";
+  saida << "(" << e.chave << ")";
   return saida;
 }
 
 istream &operator>>(istream &entrada, dado &e)
 {
-  entrada >> e.chave >> e.nomeProduto >> e.marca >> e.quantidadeDisponivel;
+  entrada >> e.chave;
   return entrada;
 }
 
@@ -45,16 +45,9 @@ class avl
 
 private:
   noh *raiz;
-  // percorrimento em ordem da árvore
-  void percorreEmOrdemAux(noh *atual, string marca);
-  void soma(noh *atual, string marca);
-  // funções auxiliares para remoção
-  noh *encontraMenor(noh *raizSub);
-  noh *removeMenor(noh *raizSub);
   // funções auxiliares para inserção e remoção usando método recursivo
   // retorna o nó para ajustar o pai ou o raiz
   noh *insereAux(noh *umNoh, const dado &umDado);
-  noh *removeAux(noh *umNoh, tipoChave chave);
   // métodos para manutenção do balanceamento
   noh *rotacaoEsquerda(noh *umNoh);
   noh *rotacaoDireita(noh *umNoh);
@@ -65,7 +58,6 @@ private:
   void destruirRecursivamente(noh *umNoh);
   void imprimirDir(const string &prefixo, const noh *meuNoh);
   void imprimirEsq(const string &prefixo, const noh *meuNoh, bool temIrmao);
-  int levantamentoAux(noh *umNoh, string marca);
   int informarAltura(noh *umNoh);
   int fatorBalanceamento(noh *umNoh);
   void atualizaAltura(noh *umNoh);
@@ -76,13 +68,7 @@ public:
   void imprimir();
   // inserção e remoção são recursivos
   void insere(const dado &umDado);
-  void remove(tipoChave chave);
-  // inserção e remoção, métodos recursivos
-  // busca retorna uma cópia do objeto armazenado
   dado busca(tipoChave chave);
-  // efetua levantamento de quantos produtos existem de uma dada marca
-  int levantamento(string marca);
-  unsigned int total;
 };
 
 // destrutor
@@ -104,6 +90,7 @@ void avl::destruirRecursivamente(noh *umNoh)
 
 int avl::informarAltura(noh *umNoh)
 {
+  acessosTotal++;
   if (umNoh == NULL)
   {
     return 0;
@@ -113,6 +100,7 @@ int avl::informarAltura(noh *umNoh)
 
 void avl::atualizaAltura(noh *umNoh)
 {
+  acessosTotal++;
   int altArvEsq = informarAltura(umNoh->esq);
   int altArvDir = informarAltura(umNoh->dir);
   umNoh->altura = 1 + max(altArvEsq, altArvDir);
@@ -120,6 +108,7 @@ void avl::atualizaAltura(noh *umNoh)
 
 int avl::fatorBalanceamento(noh *umNoh)
 {
+  acessosTotal++;
   int altArvEsq = informarAltura(umNoh->esq);
   int altArvDir = informarAltura(umNoh->dir);
   int fatorBal = altArvEsq - altArvDir;
@@ -131,43 +120,10 @@ void avl::insere(const dado &umDado)
   raiz = insereAux(raiz, umDado);
 }
 
-int avl::levantamento(string marca)
-{
-  int total = levantamentoAux(raiz, marca);
-  return total;
-}
-
-int avl::levantamentoAux(noh *umNoh, string marca)
-{
-  total = 0;
-  percorreEmOrdemAux(umNoh, marca);
-
-  return total;
-}
-
-void avl::soma(noh *atual, string marca)
-{
-  if (atual->elemento.marca == marca)
-  {
-    total += atual->elemento.quantidadeDisponivel;
-  }
-}
-
-// utiliza o nó atual e seu nível na árvore (para facilitar visualização)
-void avl::percorreEmOrdemAux(noh *atual, string marca)
-{
-  if (atual != NULL)
-  {
-    percorreEmOrdemAux(atual->esq, marca);
-    soma(atual, marca);
-    percorreEmOrdemAux(atual->dir, marca);
-  }
-}
-
 // inserção recursiva, devolve nó para atribuição de pai ou raiz
 noh *avl::insereAux(noh *umNoh, const dado &umDado)
 {
-
+  acessosTotal++;
   if (umNoh == NULL)
   {
     noh *novo = new noh(umDado);
@@ -184,7 +140,6 @@ noh *avl::insereAux(noh *umNoh, const dado &umDado)
     else if (umDado.chave == umNoh->elemento.chave)
     {
       throw runtime_error("Erro na inserção: chave já existente!");
-      return umNoh;
     }
     else
     {
@@ -199,6 +154,7 @@ noh *avl::insereAux(noh *umNoh, const dado &umDado)
 // fazendo as rotações e ajustes necessários
 noh *avl::arrumaBalanceamento(noh *umNoh)
 {
+  acessosTotal++;
   atualizaAltura(umNoh);
   int bal = fatorBalanceamento(umNoh);
   if ((bal >= -1) and (bal <= 1))
@@ -230,6 +186,7 @@ noh *avl::arrumaBalanceamento(noh *umNoh)
 // retorna o novo pai da subárvore
 noh *avl::rotacaoEsquerda(noh *umNoh)
 {
+  acessosTotal++;
   noh *aux = umNoh->dir;
   umNoh->dir = aux->esq;
   aux->esq = umNoh;
@@ -242,6 +199,7 @@ noh *avl::rotacaoEsquerda(noh *umNoh)
 // retorna o novo pai da subárvore
 noh *avl::rotacaoDireita(noh *umNoh)
 {
+  acessosTotal++;
   noh *aux = umNoh->esq;
   umNoh->esq = aux->dir;
   aux->dir = umNoh;
@@ -256,6 +214,7 @@ noh *avl::buscaAux(tipoChave chave)
   noh *atual = raiz;
   while (atual != NULL)
   {
+    acessosTotal++;
     if (atual->elemento.chave == chave)
     {
       return atual;
@@ -269,6 +228,8 @@ noh *avl::buscaAux(tipoChave chave)
       atual = atual->dir;
     }
   }
+  acessosTotal++;
+
   return NULL;
 }
 
@@ -279,80 +240,7 @@ dado avl::busca(tipoChave chave)
   if (resultado != NULL)
     return resultado->elemento;
   else
-    throw runtime_error("Erro na busca: elemento não encontrado!");
-}
-
-// nó mínimo (sucessor) de subárvore com raiz em raizSub (folha mais à esquerda)
-noh *avl::encontraMenor(noh *raizSub)
-{
-  while (raizSub->esq != NULL)
-  {
-    raizSub = raizSub->esq;
-  }
-  return raizSub;
-}
-
-// remoção recursiva
-void avl::remove(tipoChave chave)
-{
-  raiz = removeAux(raiz, chave);
-}
-
-// procedimento auxiliar para remover o sucessor substituíndo-o pelo
-// seu filho à direita
-noh *avl::removeMenor(noh *raizSub)
-{
-  if (raizSub->esq != NULL)
-  {
-    return raizSub->dir;
-  }
-  else
-  {
-    raizSub->esq = removeMenor(raizSub->esq);
-    return arrumaBalanceamento(raizSub);
-  }
-}
-
-noh *avl::removeAux(noh *umNoh, tipoChave chave)
-{
-  if (umNoh == NULL)
-  {
-    throw runtime_error("Erro na remoção: chave não encontrada!");
-  }
-
-  noh *novaRaizSubArvore = umNoh;
-  if (chave < umNoh->elemento.chave)
-  {
-    umNoh->esq = removeAux(umNoh->esq, chave);
-  }
-  else if (chave > umNoh->elemento.chave)
-  {
-    umNoh->dir = removeAux(umNoh->dir, chave);
-  }
-  else
-  {
-    if (umNoh->esq == NULL)
-    {
-      novaRaizSubArvore = umNoh->dir;
-    }
-    else if (umNoh->dir == NULL)
-    {
-      novaRaizSubArvore = umNoh->esq;
-    }
-    else
-    {
-      novaRaizSubArvore = encontraMenor(umNoh->dir);
-      novaRaizSubArvore->dir = removeMenor(umNoh->dir);
-      novaRaizSubArvore->esq = umNoh->esq;
-    }
-    delete umNoh;
-  }
-  if (novaRaizSubArvore == NULL)
-  {
-    return novaRaizSubArvore;
-  }
-
-  return arrumaBalanceamento(novaRaizSubArvore);
+    cout << "Erro na busca: elemento não encontrado!";
 }
 
 ostream &
@@ -369,7 +257,8 @@ void avl::imprimirDir(const std::string &prefixo, const noh *meuNoh)
   {
     std::cout << prefixo
               << "└d─"
-              << "(" << meuNoh->elemento.chave << "," << meuNoh->elemento.nomeProduto << ")"
+              << "(" << meuNoh->elemento.chave
+              << ")"
               << std::endl;
 
     // Repassa o prefixo para manter o historico de como deve ser a formatacao e chama no filho direito e esquerdo
@@ -391,7 +280,8 @@ void avl::imprimirEsq(const std::string &prefixo, const noh *meuNoh, bool temIrm
     else
       std::cout << "├e─";
 
-    std::cout << "(" << meuNoh->elemento.chave << "," << meuNoh->elemento.nomeProduto << ")"
+    std::cout << "(" << meuNoh->elemento.chave
+              << ")"
               << std::endl;
 
     // Repassa o prefixo para manter o historico de como deve ser a formatacao e chama no filho direito e esquerdo
@@ -405,7 +295,8 @@ void avl::imprimir()
 {
   if (this->raiz != nullptr)
   {
-    std::cout << "(" << this->raiz->elemento.chave << "," << this->raiz->elemento.nomeProduto << ")" << std::endl;
+    std::cout << "(" << this->raiz->elemento.chave
+              << ")" << std::endl;
     // apos imprimir a raiz, chama os respectivos metodos de impressao nas subarvore esquerda e direita
     // a chamada para a impressao da subarvore esquerda depende da existencia da subarvore direita
     imprimirEsq(" ", this->raiz->esq, this->raiz->dir == nullptr);
@@ -420,8 +311,6 @@ int main()
   avl arvore;
   tipoChave chave;
   dado umDado;
-  string marca;
-  int quantidade;
 
   char operacao;
 
@@ -432,24 +321,20 @@ int main()
       cin >> operacao;
       switch (operacao)
       {
-      case 'i': // Inserir recursivamente
-        // objeto recebe chave, nome do produto, marca, quantidade disponível
+      case 'i':
         cin >> umDado;
+        cout << acessosTotal << endl;
         arvore.insere(umDado);
+        cout << acessosTotal << endl;
+        acessosTotal = 0;
         break;
-      case 'r': // Remover recursivamente
-        cin >> chave;
-        arvore.remove(chave);
-        break;
-      case 'b':                       // Buscar
-        cin >> chave;                 // ler a chave
+      case 'b':       // Buscar
+        cin >> chave; // ler a chave
+        cout << acessosTotal << endl;
         umDado = arvore.busca(chave); // escrever dados do produto
         cout << "Elemento buscado: " << umDado << endl;
-        break;
-      case 'l':       // Levantamento por marca
-        cin >> marca; // ler a marca
-        quantidade = arvore.levantamento(marca);
-        cout << "Levantamento da marca " << marca << ": " << quantidade << endl;
+        cout << acessosTotal << endl;
+        acessosTotal = 0;
         break;
       case 'e': // Escrever tudo (em ordem)
         cout << arvore;
