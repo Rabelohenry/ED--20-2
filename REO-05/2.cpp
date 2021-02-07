@@ -59,7 +59,7 @@ Arvore::Arvore(const Arvore &arv)
         mPtDir = new Arvore(*arv.mPtDir);
     }
 }
-//DÚVIDA: deletar filhos esquerdo e direito é o mesmo que chamar o destrutor nas duas sub árvores?
+
 Arvore::~Arvore()
 {
     delete mPtEsq;
@@ -70,7 +70,7 @@ void Arvore::EscreverNivelANivel(ostream &saida)
 {
     queue<Arvore *> filhos;
     Arvore aux;
-    Arvore *fimDeNivel = &aux; // marcador especial para fim de nivel
+    Arvore *fimDeNivel = &aux;
     filhos.push(this);
     filhos.push(fimDeNivel);
     while (not filhos.empty())
@@ -98,31 +98,32 @@ void Arvore::EscreverNivelANivel(ostream &saida)
 }
 
 Arvore *Arvore::Menor()
-{ //---------------------------certo?
-    Arvore *iter = this;
-    while (!iter->mPtEsq->mVazia) //enquanto a proxima sub arvore não for vazia
+{
+    Arvore *atual = this;
+    while (!atual->mPtEsq->mVazia)
     {
-        iter = iter->mPtEsq;
+        atual = atual->mPtEsq;
     }
-    return iter;
+    return atual;
 }
 
 void Arvore::SubstituirPor(Arvore *ptArv)
-{ //--------------------------------------certo?-----------------CORRIGIR
-    //DEU CERTO ATÉ O TESTE "2 2"            TESTAR DESENHANDO
-    if (ptArv->mVazia) //mudei o teste de "ptArv == NULL" para "ptArv->mVazia". Pois devido ao meu Inserir, os filhos nunca são NULL(?)
+{
+
+    if (ptArv->mVazia)
+    {
         throw invalid_argument("Substitutição de nós falhou.");
-    // complete aqui
-    Arvore *raiz_antiga = this;
-    Arvore *nova_raiz = new Arvore(*ptArv); //copia toda a sub_árvore de raiz ptArv (mudar?)
-    nova_raiz->mPtEsq = raiz_antiga->mPtEsq;
-    nova_raiz->mPtDir = raiz_antiga->mPtDir;
-    raiz_antiga->mPtEsq = NULL;
-    raiz_antiga->mPtDir = NULL;
-    //os ponteiros estão apontando pra NULL e agora os ponteiros da nova raiz estão apontando para ele, então não há nessecidade de dar delete na raiz_antiga
+    }
+
+    Arvore *antiga = this;
+    Arvore *nova = new Arvore(*ptArv);
+    nova->mPtEsq = antiga->mPtEsq;
+    nova->mPtDir = antiga->mPtDir;
+    antiga->mPtEsq = NULL;
+    antiga->mPtDir = NULL;
     delete ptArv;
-    ptArv = new Arvore; //necessário para manter minha ideia do Inserir
-    *this = *nova_raiz;
+    ptArv = new Arvore;
+    *this = *nova;
 }
 
 TValor &Arvore::Buscar(const TChave &chave)
@@ -138,71 +139,68 @@ TValor &Arvore::Buscar(const TChave &chave)
 }
 
 void Arvore::Inserir(const TChave &chave, const TValor &valor)
-{ //------------------------certo?    provavelmente precisarei mudar?
+{
     if (mVazia)
-    { //se estiver vazia, simplesmente insere a chave e o valor
+    {
         mChave = chave;
         mValor = valor;
         mVazia = false;
-        //já prepara as sub_árvores esquerda e direita para futura inserção
         mPtEsq = new Arvore;
         mPtDir = new Arvore;
     }
     else
-    { //caso contrário
+    {
         if (chave < mChave)
-        { //se a chave é menor, tenta inserir no filho esquerdo
+        {
             mPtEsq->Inserir(chave, valor);
         }
         else if (chave > mChave)
-        { //se a chave é maior, tenta inserir no filho direito
+        {
             mPtDir->Inserir(chave, valor);
         }
     }
 }
 
 bool Arvore::Remover(const TChave &chave)
-{ //----------------------------certo?----------------ERRADO. PRECISA PROCURAR A CHAVE(mudei)
-    //até aqui deu para seguir com minha ideia do inserir
+{
     if (mVazia)
-    { //se a chave for fazia, retorna falso
+    {
         return false;
     }
-    if (mPtEsq->mVazia && mPtDir->mVazia)
-    {                        //caso seja uma folha
-        this->mVazia = true; //é excluída logicamente
+    if (mPtEsq->mVazia and mPtDir->mVazia)
+    {
+        this->mVazia = true;
         return true;
     }
-    bool removeu = true; //é true até que prove o contrário
+    bool removeu = true;
     try
     {
-
         if (chave == mChave)
-        { //se achou a sub árvore com a chave
+        {
             if (!mPtDir->mVazia)
-            { //se tiver direito, substitui pelo sucessor
+            {
                 SubstituirPor(mPtDir->Menor());
             }
             else
-            {                          //caso contrário, tenta substituir pelo filho esquerdo
-                SubstituirPor(mPtEsq); //caso seja vazio, vai cair em um throw e retornar false
+            {
+                SubstituirPor(mPtEsq);
             }
         }
         else
         {
             if (chave < mChave)
-            { //se a chave está na sub árvore esquerda
+            {
                 removeu = mPtEsq->Remover(chave);
             }
             else if (chave > mChave)
-            { //se a chave está na sub árvore direita
+            {
                 removeu = mPtDir->Remover(chave);
             }
         }
     }
     catch (runtime_error &e)
     {
-        return false; //ignora a mensagem de erro e retorna false
+        return false;
     }
     return removeu;
 }
